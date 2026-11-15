@@ -3,6 +3,7 @@ services:
   - type: web
     name: kid-whiteboard
     runtime: node
+    plan: free          # 免費方案（閒置約 15 分鐘會休眠，第一次開要等約 1 分鐘）
     buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /healthz
