@@ -75,6 +75,7 @@ $('fileImg').addEventListener('change', (e) => addFile(e.target));
 $('fileDoc').addEventListener('change', (e) => addFile(e.target));
 
 $('startBtn').addEventListener('click', async () => {
+  unlockTTS();
   const q = $('question').value.trim();
   if (!q && !S.files.length) { $('question').focus(); $('question').placeholder = '請先告訴老師你想學什麼喔'; return; }
   $('startBtn').disabled = true; $('startBtn').textContent = '老師準備中…';
@@ -154,13 +155,34 @@ async function playStep(step, id) {
   return (await tick(500, id)) && r.every((x) => x !== false);
 }
 
+// ---------- 朗讀 ----------
+// iOS Safari 規定：朗讀必須在「使用者點擊」的當下啟動過一次，之後才允許在非點擊的時機朗讀
+let ttsKeep = null; // 保留參照，避免某些瀏覽器在朗讀途中把語音物件回收
+function normLang() { return (LANG_VOICE[$('lang').value] || 'zh-TW'); }
+function pickVoice(lang) {
+  if (!('speechSynthesis' in window)) return null;
+  const vs = speechSynthesis.getVoices();
+  const l = lang.toLowerCase();
+  const fix = (v) => v.lang.toLowerCase().replace('_', '-');
+  return vs.find((v) => fix(v) === l) || vs.find((v) => fix(v).startsWith(l.slice(0, 2))) || null;
+}
+function unlockTTS() {
+  if (!('speechSynthesis' in window) || !$('ttsOn').checked) return;
+  try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) { /* 忽略 */ }
+}
 function speak(text, id) {
   return new Promise((resolve) => {
     if (!$('ttsOn').checked || !('speechSynthesis' in window)) return resolve(true);
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = LANG_VOICE[$('lang').value] || 'zh-TW';
+    u.lang = normLang();
+    const v = pickVoice(u.lang); if (v) u.voice = v;
     u.rate = $('age').value === 'low' ? 0.85 : 0.95;
-    u.onend = () => resolve(true); u.onerror = () => resolve(true);
+    u.onend = () => resolve(true);
+    u.onerror = (e) => {
+      if (e && (e.error === 'not-allowed' || e.error === 'synthesis-failed')) setStatus('🔇 朗讀被擋住了：請把手機靜音關掉，再按一次「朗讀」開關');
+      resolve(true);
+    };
+    ttsKeep = u;
     speechSynthesis.speak(u);
     setTimeout(() => resolve(true), 30000);
   });
@@ -232,9 +254,18 @@ $('skipBtn').addEventListener('click', () => {
   if (S.resumeFn) S.resumeFn();
   play();
 });
-$('ttsOn').addEventListener('change', () => { if (!$('ttsOn').checked) speechSynthesis.cancel(); });
+$('ttsOn').addEventListener('change', () => {
+  if (!('speechSynthesis' in window)) { alert('這個瀏覽器不支援朗讀'); $('ttsOn').checked = false; return; }
+  speechSynthesis.cancel();
+  if (!$('ttsOn').checked) return;
+  const msgs = { 'zh-TW': '朗讀開啟了', 'zh-CN': '朗读开启了', en: 'Read aloud is on', ja: '読み上げをオンにしました', ko: '읽어주기를 켰어요', es: 'Lectura activada', fr: 'Lecture activée', de: 'Vorlesen ist an', vi: 'Đã bật đọc to', th: 'เปิดการอ่านออกเสียงแล้ว' };
+  const u = new SpeechSynthesisUtterance(msgs[$('lang').value] || msgs['zh-TW']);
+  u.lang = normLang(); const v = pickVoice(u.lang); if (v) u.voice = v;
+  ttsKeep = u; speechSynthesis.speak(u);
+});
 
 async function ask() {
+  unlockTTS();
   const q = $('askInput').value.trim();
   if (!q || S.busy) return;
   S.busy = true; $('askBtn').disabled = true; $('askInput').value = '';
@@ -285,3 +316,5 @@ function renderWrapup(r) {
     wrap.appendChild(exp); box.appendChild(wrap);
   });
 }
+
+if ('speechSynthesis' in window) { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); }
