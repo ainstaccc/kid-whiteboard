@@ -192,10 +192,15 @@ function drawEl(el) {
     case 'polygon': case 'polyline':
       n = mk(el.type, { ...base, ...(el.type === 'polygon' ? fillAttrs : {}), points: (el.points || []).map((p) => `${clamp(p[0], 0, 1000)},${clamp(p[1], 0, 600)}`).join(' ') });
       break;
-    case 'text':
-      n = mk('text', { x, y, 'text-anchor': 'middle', 'font-size': clamp(el.size || 32, 28, 80), 'font-weight': 700, fill: c, style: 'font-family:inherit;white-space:pre' });
+    case 'text': {
+      // 手機上白板會縮小，字要放大到實際約 17px 以上；並把文字夾在畫布內，避免被切掉
+      const bw = $('board').getBoundingClientRect().width || 1000;
+      const fs = Math.min(90, Math.max(clamp(el.size || 32, 28, 80), Math.round((17 * 1000) / bw)));
+      const half = ((el.text || '').length * fs) / 2;
+      const tx = clamp(x, Math.min(half + 12, 500), Math.max(1000 - half - 12, 500));
+      n = mk('text', { x: tx, y, 'text-anchor': 'middle', 'font-size': fs, 'font-weight': 700, fill: c, style: 'font-family:inherit;white-space:pre' });
       n.textContent = el.text || '';
-      break;
+      break; }
     default: return;
   }
   $('layer').appendChild(n);
