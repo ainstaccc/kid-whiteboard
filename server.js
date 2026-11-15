@@ -124,17 +124,21 @@ function cleanLesson(raw) {
 }
 
 async function callTool(sys, content, tool) {
-  const res = await client.messages.create({
-    model: MODEL,
-    max_tokens: 8000,
-    system: sys,
-    tools: [tool],
-    tool_choice: { type: 'tool', name: tool.name },
-    messages: [{ role: 'user', content }],
-  });
-  const block = res.content.find((b) => b.type === 'tool_use');
-  if (!block) throw new Error('模型沒有回傳結構化內容');
-  return block.input;
+  // 部分新模型不支援強制 tool_choice，改用 auto，並在提示中要求一定要呼叫工具；沒呼叫就重試一次
+  const hint = `\n\n務必呼叫 ${tool.name} 工具回覆，不要輸出其他文字。`;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await client.messages.create({
+      model: MODEL,
+      max_tokens: 8000,
+      system: sys + hint,
+      tools: [tool],
+      tool_choice: { type: 'auto' },
+      messages: [{ role: 'user', content }],
+    });
+    const block = res.content.find((b) => b.type === 'tool_use');
+    if (block) return block.input;
+  }
+  throw new Error('模型沒有回傳結構化內容');
 }
 
 function pick(body) {
