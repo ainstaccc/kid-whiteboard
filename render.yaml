@@ -1,0 +1,25 @@
+# Render 一鍵部署設定（Blueprint）
+services:
+  - type: web
+    name: kid-whiteboard
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: CLAUDE_MODEL
+        value: claude-sonnet-5-5
+      - key: DAILY_LIMIT
+        value: "200"
+      - key: HOURLY_PER_IP
+        value: "60"
+      - key: ANTHROPIC_API_KEY
+        sync: false        # 部署時手動填
+      - key: ACCESS_CODE
+        sync: false        # 部署時手動填：給孩子的通關密碼
+      - key: SESSION_SECRET
+        generateValue: true

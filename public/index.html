@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小白板老師</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%2290%22 font-size=%2290%22>🎓</text></svg>">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="小白板老師">
+<meta name="theme-color" content="#3b82f6">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 登入遮罩 -->
+<div id="login" class="login" hidden>
+  <div class="login-card">
+    <div class="login-logo">🎓</div>
+    <h2>小白板老師</h2>
+    <p>請輸入家長給的通關密碼</p>
+    <input id="code" type="password" inputmode="text" autocomplete="current-password" placeholder="通關密碼">
+    <div id="loginErr" class="login-err"></div>
+    <button id="loginBtn" class="btn big">進教室 ▶</button>
+  </div>
+</div>
+
+<header class="top">
+  <div class="logo">🎓 小白板老師</div>
+  <div class="top-right">
+    <label class="pill">年級
+      <select id="age">
+        <option value="low">小一～小二</option>
+        <option value="mid" selected>小三～小六</option>
+        <option value="high">國中</option>
+      </select>
+    </label>
+    <label class="pill">語言
+      <select id="lang">
+        <option value="zh-TW" selected>繁體中文</option>
+        <option value="zh-CN">简体中文</option>
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="vi">Tiếng Việt</option>
+        <option value="th">ภาษาไทย</option>
+      </select>
+    </label>
+  </div>
+</header>
+
+<div id="demoBanner" class="banner" hidden>⚠️ 目前是示範模式（沒有填 API 金鑰），只會播放固定範例課</div>
+
+<!-- 首頁 -->
+<main id="home" class="home">
+  <h1>你想學什麼呢？</h1>
+  <p class="sub">打字、拍照題目或上傳檔案，老師會邊講邊畫給你看</p>
+
+  <div class="modes" id="modes">
+    <button class="mode active" data-mode="topic">💡 學概念<span>慢慢聽懂</span></button>
+    <button class="mode" data-mode="exam">📝 準備考試<span>重點＋練習</span></button>
+    <button class="mode" data-mode="homework">✏️ 寫作業<span>提示不給答案</span></button>
+  </div>
+
+  <textarea id="question" rows="3" placeholder="例如：為什麼天空是藍色的？"></textarea>
+
+  <div class="row">
+    <label class="btn ghost">📷 拍照／選圖片<input id="fileImg" type="file" accept="image/*" hidden></label>
+    <label class="btn ghost">📄 上傳 PDF／文字檔<input id="fileDoc" type="file" accept=".pdf,.txt,.md" hidden></label>
+    <span id="fileName" class="filename"></span>
+  </div>
+
+  <button id="startBtn" class="btn big">開始上課 ▶</button>
+
+  <div class="chips" id="chips">
+    <button class="chip">為什麼會有白天和黑夜？</button>
+    <button class="chip">分數怎麼比大小？</button>
+    <button class="chip">什麼是光合作用？</button>
+    <button class="chip">三角形有什麼特別？</button>
+  </div>
+
+  <p class="note">🔒 你輸入的內容不會被儲存。老師也可能出錯，重要的事請跟老師或課本確認喔！</p>
+</main>
+
+<!-- 上課 -->
+<main id="class" class="class" hidden>
+  <section class="board-wrap">
+    <div class="board-title"><span id="lessonTitle"></span><span id="status" class="status"></span></div>
+    <svg id="board" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"/>
+        </marker>
+      </defs>
+      <g id="layer"></g>
+    </svg>
+    <div class="controls">
+      <button id="pauseBtn" class="btn ghost">⏸ 暫停</button>
+      <button id="skipBtn" class="btn ghost">⏭ 下一步</button>
+      <label class="toggle"><input type="checkbox" id="ttsOn"> 🔊 朗讀</label>
+      <button id="homeBtn" class="btn ghost">🏠 換題目</button>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div id="chat" class="chat"></div>
+    <div id="wrapup" class="wrapup" hidden></div>
+    <div class="ask">
+      <input id="askInput" type="text" placeholder="聽不懂？隨時問老師">
+      <button id="askBtn" class="btn">送出</button>
+    </div>
+  </aside>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
